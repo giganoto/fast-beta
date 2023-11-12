@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: admin_db
+    volumes:
+      - ./data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - admin_network
+
+  admin_backend:
+    build: .
+    container_name: admin_backend
+    networks:
+      - admin_network
+    depends_on:
+      - postgres
+    volumes:
+      - ./app/:/app/app/
+
+  admin_frontend:
+    build: ./ui
+    container_name: admin_frontend
+    networks:
+      - admin_network
+    volumes:
+      - ./ui/src/:/app/src/
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    ports:
+      - "8080:80"
+    depends_on:
+      - admin_backend
+      - admin_frontend
+    networks:
+      - admin_network
+
+networks:
+  admin_network:
+    driver: bridge
