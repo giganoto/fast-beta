@@ -1,16 +1,15 @@
 import requests
 from flask import (
-    abort,
     blueprints,
     redirect,
     request,
     current_app as app,
     jsonify,
-    g
+    g,
 )
 
-from app.models.admin import Admin, InvalidTokens
 from app.utils.auth import generate_jwt_token, token_required
+from app.controllers.admin import create_invalid_token, get_admin_by_email
 
 
 auth = blueprints.Blueprint("auth", __name__, url_prefix="/api/auth")
@@ -60,18 +59,39 @@ def callback():
         headers={"Authorization": f"Bearer {access_token}"},
     )
     user_info = user_info_res.json()
-    if Admin.exists(user_info["email"]):
+    try:
+        email = user_info["email"]
+        get_admin_by_email(email)
         token = generate_jwt_token(user_info)
         return jsonify({"token": token})
-    else:
-        abort(403)
+    except Exception as e:
+        return (
+            jsonify(
+                {
+                    "message": "Something went wrong",
+                    "error": str(e),
+                }
+            ),
+            400,
+        )
 
 
 @auth.route("/logout", methods=["POST"])
 @token_required
 def logout():
-    InvalidTokens.add(g.token)
-    return jsonify({"message": "Logged out successfully"}), 200
+    try:
+        create_invalid_token(g.token)
+        return jsonify({"message": "Logged out successfully"}), 200
+    except Exception as e:
+        return (
+            jsonify(
+                {
+                    "message": "Something went wrong",
+                    "error": str(e),
+                }
+            ),
+            400,
+        )
 
 
 @auth.route("/secure-ping")

@@ -58,7 +58,9 @@ function App() {
 
   return (
     <AuthContext.Provider value={{ isAuth, setIsAuth, handleLogin, handleLogout }}>
-      <AdminDashboard />
+      <div className='app'>
+        <AdminDashboard />
+      </div>
     </AuthContext.Provider>
   );
 }

@@ -5,14 +5,25 @@ const AdminDashboard = () => {
   const { isAuth, handleLogin, handleLogout } = useAuth();
 
   return (
-    <div>
-      <h1>Admin Dashboard</h1>
-      {isAuth ? (
-        <button onClick={handleLogout}>Logout</button>
-      ): (
-        <button onClick={handleLogin}>Login</button>
-      )}
-    </div>
+    <>
+      <header>
+        <nav>
+          <ul>
+            <li>
+              {isAuth ? (
+                <button className="primary-btn" onClick={handleLogout}>Logout</button>
+              ): (
+                <button className="primary-btn" onClick={handleLogin}>Login</button>
+              )}
+            </li>
+          </ul>
+        </nav>
+      </header>
+      <main>
+        <h1>{ isAuth ? "Admin Dashboard" : "Please Login" }</h1>
+      </main>
+      <footer></footer>
+    </>
   );
 }
 

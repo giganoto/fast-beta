@@ -8,7 +8,7 @@ app = create_app()
 
 @app.shell_context_processor
 def make_shell_context():
-    return {"db": db}
+    return {"db": db, "app": app}
 
 
 if __name__ == "__main__":
@@ -17,4 +17,4 @@ if __name__ == "__main__":
         if os.getenv("environment") in ("development", "testing")
         else False
     )
-    app.run(debug=debug, host="0.0.0.0", port=8080)
+    app.run(debug=debug, host="0.0.0.0", port=8081)

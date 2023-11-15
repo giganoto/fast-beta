@@ -21,9 +21,7 @@ def generate_jwt_token(user_info):
             "sub": user_info["email"],
         }
         return jwt.encode(
-            payload,
-            app.config["SECRET_KEY"],
-            algorithm=JWT_ALGORITHM
+            payload, app.config["SECRET_KEY"], algorithm=JWT_ALGORITHM
         )
     except Exception as e:
         return e

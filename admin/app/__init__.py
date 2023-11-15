@@ -24,8 +24,22 @@ def create_app():
 
     db.init_app(app)
 
-    from . import auth
+    with app.app_context():
+        from .models.admin import Admin
+        from .models.blog import Blog, BlogCategory, BlogTag  # noqa: F401
 
-    app.register_blueprint(auth.auth)
+        db.create_all()
+
+        name, email = app.config["ADMIN_NAME"], app.config["ADMIN_EMAIL"]
+        if not Admin.get(email):
+            admin = Admin.create_instance(name=name, email=email)
+            db.session.add(admin)
+            db.session.commit()
+
+    from .views.auth import auth
+    from .views.blogs import blog
+
+    app.register_blueprint(auth)
+    app.register_blueprint(blog)
 
     return app
