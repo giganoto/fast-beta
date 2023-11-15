@@ -6,16 +6,16 @@
 
 ## To Do
 
-[] Write test cases for BE (using unittests and Pytest)
-[] Code coverage
-[] Documentation generation
-[X] Admin APIs for Blog
-[] Admin APIs for Courses
-[X] Login using Google OAuth
-[X] Sentry Integration
-[] Admin UI using React JS
-[] CI/CD using Github Actions
-[] Production deployment scripts (Terraform?)
+- [ ] Write test cases for BE (using unittests and Pytest)
+- [ ] Code coverage
+- [ ] Documentation generation
+- [X] Admin APIs for Blog
+- [ ] Admin APIs for Courses
+- [X] Login using Google OAuth
+- [X] Sentry Integration
+- [ ] Admin UI using React JS
+- [ ] CI/CD using Github Actions
+- [ ] Production deployment scripts (Terraform?)
 
 
 ## What is Giganoto?
