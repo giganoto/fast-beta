@@ -2,18 +2,21 @@ version: '3.8'
 
 services:
   postgres:
-    image: postgres:latest
+    image: postgres:16.1
     container_name: postgres
-    environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin
-      POSTGRES_DB: admin_db
+    env_file:
+      - .docker.env
     volumes:
       - ./data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     networks:
       - admin_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   admin_backend:
     build: .
@@ -21,7 +24,8 @@ services:
     networks:
       - admin_network
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     volumes:
       - ./app/:/app/app/
 
@@ -34,7 +38,7 @@ services:
       - ./ui/src/:/app/src/
 
   nginx:
-    image: nginx:latest
+    image: nginx:1.25.3
     container_name: nginx
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf

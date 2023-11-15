@@ -6,7 +6,11 @@ load_dotenv()
 
 
 class Config:
-    SECRET_KEY = os.getenv("secret_key", "secret-that-no-one-can-guess-ever")
+
+    ADMIN_NAME = os.getenv("admin_name")
+    ADMIN_EMAIL = os.getenv("admin_email")
+
+    SECRET_KEY = os.getenv("secret_key")
     SENTRY_DSN = os.getenv("sentry_dsn")
 
     GOOGLE_CLIENT_ID = os.getenv("client_id")
