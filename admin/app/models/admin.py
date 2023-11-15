@@ -35,7 +35,7 @@ class Admin(db.Model):
             email (str): The email to check.
 
         Returns:
-            bool: True if an admin with email exists, False otherwise.
+            Admin: An instance of Admin if found, None otherwise.
         """
         return cls.query.filter_by(email=email).first()
 

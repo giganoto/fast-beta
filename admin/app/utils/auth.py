@@ -20,9 +20,7 @@ def generate_jwt_token(user_info):
             "iat": datetime.datetime.utcnow(),
             "sub": user_info["email"],
         }
-        return jwt.encode(
-            payload, app.config["SECRET_KEY"], algorithm=JWT_ALGORITHM
-        )
+        return jwt.encode(payload, app.config["SECRET_KEY"], algorithm=JWT_ALGORITHM)
     except Exception as e:
         return e
 
@@ -30,26 +28,20 @@ def generate_jwt_token(user_info):
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        token = (
-            request.args.get("token")
-            or request.json.get("token")
-            or request.form.get("token")
-        )
+        token = request.headers.get("Authorization", "").replace("Bearer ", "")
         if not token:
             abort(403, "Token is missing")
         if InvalidTokens.exists(token):
             abort(403, "Invalid token")
         try:
-            data = jwt.decode(
-                token, app.config["SECRET_KEY"], algorithms=JWT_ALGORITHM
-            )
+            data = jwt.decode(token, app.config["SECRET_KEY"], algorithms=JWT_ALGORITHM)
             current_admin = Admin.query.filter_by(email=data["sub"]).first()
             if not current_admin:
-                abort(403)
+                abort(403, "Admin not found")
             g.current_admin = current_admin
             g.token = token
-        except Exception:
-            abort(403)
+        except Exception as err:
+            abort(403, str(err))
 
         return f(*args, **kwargs)
 

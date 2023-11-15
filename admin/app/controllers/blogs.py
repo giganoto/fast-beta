@@ -74,9 +74,7 @@ def get_all_blogs(
     offset: Optional[int] = None,
 ) -> Optional[List[Blog]]:
     try:
-        return [
-            blog.to_dict() for blog in Blog.get_all(limit=limit, offset=offset)
-        ]
+        return [blog.to_dict() for blog in Blog.get_all(limit=limit, offset=offset)]
     except Exception as e:
         handle_exception(e, "Blog does not exist")
 

@@ -41,10 +41,7 @@ class BlogCategory(db.Model):
 
     def __repr__(self) -> str:
         """Provide a string representation of the BlogCategory instance."""
-        return (
-            f"<BlogCategory(name={self.name}, "
-            f"description={self.description})>"
-        )
+        return f"<BlogCategory(name={self.name}, " f"description={self.description})>"
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -227,9 +224,7 @@ class Blog(db.Model):
     content: str = Column(Text, nullable=False)
     category_id: int = Column(Integer, ForeignKey("blog_categories.id"))
     category = relationship("BlogCategory", backref="blogs")
-    tags = relationship(
-        "BlogTag", secondary=blog_tags_association, backref="blogs"
-    )
+    tags = relationship("BlogTag", secondary=blog_tags_association, backref="blogs")
     created_at = Column(DateTime, server_default=db.func.now())
 
     def __repr__(self) -> str:
