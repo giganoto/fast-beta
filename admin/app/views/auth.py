@@ -15,11 +15,6 @@ from app.controllers.admin import create_invalid_token, get_admin_by_email
 auth = blueprints.Blueprint("auth", __name__, url_prefix="/api/auth")
 
 
-@auth.errorhandler(403)
-def forbidden(e):
-    return jsonify({"message": "Forbidden", "error": str(e)}), 403
-
-
 @auth.route("/login")
 def login():
     # OAUTH2 Step 1: Redirect to Google's OAuth 2.0 Server

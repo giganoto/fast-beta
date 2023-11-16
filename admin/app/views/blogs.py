@@ -132,16 +132,16 @@ def create_tag():
     return jsonify(tag)
 
 
-@blog.route("/tag/<int:tag_id>", methods=["PUT"])
+@blog.route("/tag/<int:tag_id>", methods=["PATCH"])
 @token_required
 def update_tag(tag_id: int):
     data = request.get_json()
     name = data.get("name")
     description = data.get("description")
     updated_tag_dict = update_blog_tag(
-        tag_id=tag_id,
-        name=name,
-        description=description,
+        tag_id,
+        name,
+        description,
     )
     return jsonify(updated_tag_dict)
 

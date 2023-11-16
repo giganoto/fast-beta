@@ -10,10 +10,11 @@ from sqlalchemy import (
     Table,
     ForeignKey,
 )
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, validates
 from slugify import slugify
 
 from app import db
+from app.utils.error import GiganotoException
 
 
 class BlogCategory(db.Model):
@@ -135,6 +136,16 @@ class BlogTag(db.Model):
             "description": self.description,
             "created_at": self.created_at,
         }
+
+    @validates("name", "description")
+    def validates_required(self, key, value):
+        if not value:
+            raise GiganotoException(f"Tag {key} cannot be empty")
+        if len(value) > 80:
+            raise GiganotoException(f"Tag {key} cannot be longer than 80 characters")
+        elif len(value) == 0:
+            raise GiganotoException(f"Tag {key} cannot be empty")
+        return value
 
     @classmethod
     def get_by_id(cls, id: int) -> "BlogTag":

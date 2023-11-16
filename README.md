@@ -18,6 +18,11 @@
 - [ ] Production deployment scripts (Terraform?)
 
 
+## ToDo
+
+- Current code faces no single source of truth because of maintaining fields accross API, SQLAlchemy and later on Schema if I use something like Marshmallow or Pedantic, I am looking into SQLModel (https://sqlmodel.tiangolo.com/features/) for this reason.
+
+
 ## What is Giganoto?
 
 - An E-learning platform which is Free and Open-Source in every possible sense.

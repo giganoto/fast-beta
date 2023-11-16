@@ -1,5 +1,7 @@
 from typing import List, Optional
 
+from flask import abort
+
 from app import db
 from app.models.blog import Blog, BlogCategory, BlogTag
 from app.utils.error import handle_exception
@@ -177,7 +179,7 @@ def create_blog_tag(
         db.session.commit()
         return tag.to_dict()
     except Exception as e:
-        handle_exception(e, "Tag already exists")
+        handle_exception(e, str(e))
 
 
 def update_blog_tag(
@@ -186,24 +188,28 @@ def update_blog_tag(
     description: Optional[str] = None,
 ) -> Optional[BlogTag]:
     try:
-        tag = BlogTag.get_by_id(tag_id=id)
-        if name:
+        tag = BlogTag.get_by_id(id)
+        if tag is None:
+            abort(404, "Tag does not exist")
+        if name is not None:
             tag.name = name
-        if description:
+        if description is not None:
             tag.description = description
         db.session.commit()
         return tag.to_dict()
     except Exception as e:
-        handle_exception(e, "Tag does not exist")
+        handle_exception(e)
 
 
 def delete_blog_tag(id: int):
     try:
         tag = BlogTag.get_by_id(tag_id=id)
+        if tag is None:
+            abort(404, "Tag does not exist")
         db.session.delete(tag)
         db.session.commit()
     except Exception as e:
-        handle_exception(e, "Tag does not exist")
+        handle_exception(e)
 
 
 def get_all_tags(

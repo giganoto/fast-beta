@@ -52,7 +52,7 @@ def test_logout_failure(client):
         url_for("auth.logout"),
         headers={"Authorization": f"Bearer {invalid_token}"},
     )
-    assert response.status_code == 403
+    assert response.status_code == 401
     assert "error" in json.loads(response.data)
 
 
@@ -72,7 +72,7 @@ def test_secure_ping_access_denied(client):
     "Test access to secure endpoint without valid token."
 
     response = client.get(url_for("auth.secure_ping"))
-    assert response.status_code == 403
+    assert response.status_code == 401
     assert "Forbidden" in json.loads(response.data)["message"]
 
 
@@ -91,5 +91,5 @@ def test_secure_ping_access_invalid_token(client, init_database, test_admin):
         url_for("auth.secure_ping"),
         headers={"Authorization": f"Bearer {should_be_invalid_token}"},
     )
-    assert response.status_code == 403
+    assert response.status_code == 401
     assert "Invalid token" in json.loads(response.data)["error"]

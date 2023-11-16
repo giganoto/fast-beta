@@ -30,18 +30,18 @@ def token_required(f):
     def decorated(*args, **kwargs):
         token = request.headers.get("Authorization", "").replace("Bearer ", "")
         if not token:
-            abort(403, "Token is missing")
+            abort(401, "Missing auth token")
         if InvalidTokens.exists(token):
-            abort(403, "Invalid token")
+            abort(401, "Invalid token")
         try:
             data = jwt.decode(token, app.config["SECRET_KEY"], algorithms=JWT_ALGORITHM)
             current_admin = Admin.query.filter_by(email=data["sub"]).first()
             if not current_admin:
-                abort(403, "Admin not found")
+                abort(401, "Admin not found")
             g.current_admin = current_admin
             g.token = token
         except Exception as err:
-            abort(403, str(err))
+            abort(401, "Invalid token." + str(err))
 
         return f(*args, **kwargs)
 

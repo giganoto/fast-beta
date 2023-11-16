@@ -54,13 +54,16 @@ def init_database(app):
             email=app.config["ADMIN_EMAIL"],
         )
 
-        for _ in range(TOTAL_BLOG_TAGS):
+        for idx in range(TOTAL_BLOG_TAGS):
+            fake.seed_instance(idx)
             create_blog_tag(name=fake.word(), description=fake.sentence())
 
-        for _ in range(TOTAL_BLOG_CATEGORIES):
+        for idx in range(TOTAL_BLOG_CATEGORIES):
+            fake.seed_instance(idx)
             create_blog_category(name=fake.word(), description=fake.sentence())
 
-        for _ in range(TOTAL_BLOGS):
+        for idx in range(TOTAL_BLOGS):
+            fake.seed_instance(idx)
             create_blog(
                 title=fake.sentence(),
                 description=fake.sentence(),
