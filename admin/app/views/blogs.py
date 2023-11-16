@@ -16,7 +16,7 @@ from app.controllers.blogs import (
     update_blog_category,
     delete_blog_category,
     create_blog_tag,
-    get_all_tags,
+    get_all_tags as get_all_tags_from_db,
     update_blog_tag,
     delete_blog_tag,
 )
@@ -118,8 +118,8 @@ def delete_category(category_id: int):
 
 
 @blog.route("/tag/all", methods=["GET"])
-def get_all_tags_route():
-    return jsonify(get_all_tags())
+def get_all_tags():
+    return jsonify(get_all_tags_from_db())
 
 
 @blog.route("/tag", methods=["POST"])

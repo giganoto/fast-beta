@@ -18,7 +18,7 @@ def create_blog(
             description=description,
             content=content,
             category_id=category_id,
-            tags=[BlogTag.get_by_id(tag_id=tag_id) for tag_id in tags],
+            tag_ids=tags,
         )
         db.session.add(blog)
         db.session.commit()
@@ -46,7 +46,7 @@ def update_blog(
         if category_id:
             blog.category_id = category_id
         if tags:
-            blog.tags = [BlogTag.get_by_id(tag_id=tag_id) for tag_id in tags]
+            blog.tags = [BlogTag.get_by_id(tag_id) for tag_id in tags]
         db.session.commit()
         return blog.to_dict()
     except Exception as e:
@@ -175,7 +175,7 @@ def create_blog_tag(
         )
         db.session.add(tag)
         db.session.commit()
-        return tag
+        return tag.to_dict()
     except Exception as e:
         handle_exception(e, "Tag already exists")
 
