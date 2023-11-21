@@ -10,11 +10,22 @@ from sqlalchemy import (
     Table,
     ForeignKey,
 )
-from sqlalchemy.orm import relationship, validates
+from sqlalchemy.orm import relationship, validates, Mapped
 from slugify import slugify
 
 from app import db
 from app.utils.error import GiganotoException
+
+
+NAME_MAX_LENGTH = 80
+TITLE_MAX_LENGTH = 80
+DESCRIPTION_MAX_LENGTH = 160
+
+length_mapping = {
+    "name": NAME_MAX_LENGTH,
+    "title": TITLE_MAX_LENGTH,
+    "description": DESCRIPTION_MAX_LENGTH,
+}
 
 
 class BlogCategory(db.Model):
@@ -36,9 +47,9 @@ class BlogCategory(db.Model):
     __tablename__ = "blog_categories"
 
     id: int = Column(Integer, autoincrement=True, primary_key=True)
-    name: str = Column(String(80), nullable=False, unique=True)
-    description: str = Column(String(160), nullable=False)
-    created_at = Column(DateTime, server_default=db.func.now())
+    name: str = Column(String(NAME_MAX_LENGTH), nullable=False, unique=True)
+    description: str = Column(String(DESCRIPTION_MAX_LENGTH), nullable=False)
+    created_at: datetime = Column(DateTime, default=datetime.utcnow)
 
     def __repr__(self) -> str:
         """Provide a string representation of the BlogCategory instance."""
@@ -49,8 +60,18 @@ class BlogCategory(db.Model):
             "id": self.id,
             "name": self.name,
             "description": self.description,
-            "created_at": self.created_at,
+            "created_at": self.created_at.strftime('%a, %d %b %Y %H:%M:%S GMT'),
         }
+
+    @validates("name", "description")
+    def validates_required(self, key, value):
+        if not value:
+            raise GiganotoException(f"Category {key} cannot be empty")
+        if len(value) > length_mapping[key]:
+            raise GiganotoException(f"Category {key} cannot be longer than {length_mapping[key]} characters")
+        elif len(value) == 0:
+            raise GiganotoException(f"Category {key} cannot be empty")
+        return value
 
     @classmethod
     def get_by_id(cls, id: int) -> "BlogCategory":
@@ -121,9 +142,9 @@ class BlogTag(db.Model):
     __tablename__ = "blog_tags"
 
     id: int = Column(Integer, autoincrement=True, primary_key=True)
-    name: str = Column(String(80), nullable=False, unique=True)
-    description: str = Column(String(160), nullable=False)
-    created_at: datetime = Column(DateTime, server_default=db.func.now())
+    name: str = Column(String(NAME_MAX_LENGTH), nullable=False, unique=True)
+    description: str = Column(String(DESCRIPTION_MAX_LENGTH), nullable=False)
+    created_at: datetime = Column(DateTime, default=datetime.utcnow)
 
     def __repr__(self) -> str:
         """Represent the BlogTag instance as a string."""
@@ -134,14 +155,14 @@ class BlogTag(db.Model):
             "id": self.id,
             "name": self.name,
             "description": self.description,
-            "created_at": self.created_at,
+            "created_at": self.created_at.strftime('%a, %d %b %Y %H:%M:%S GMT'),
         }
 
     @validates("name", "description")
     def validates_required(self, key, value):
         if not value:
             raise GiganotoException(f"Tag {key} cannot be empty")
-        if len(value) > 80:
+        if len(value) > length_mapping[key]:
             raise GiganotoException(f"Tag {key} cannot be longer than 80 characters")
         elif len(value) == 0:
             raise GiganotoException(f"Tag {key} cannot be empty")
@@ -230,17 +251,40 @@ class Blog(db.Model):
     __tablename__ = "blogs"
 
     id: int = Column(Integer, autoincrement=True, primary_key=True)
-    title: str = Column(String(80), nullable=False)
-    description: str = Column(String(160), nullable=False)
+    title: str = Column(String(TITLE_MAX_LENGTH), nullable=False)
+    description: str = Column(String(DESCRIPTION_MAX_LENGTH), nullable=False)
     content: str = Column(Text, nullable=False)
+    is_draft: bool = Column(db.Boolean, default=True)
     category_id: int = Column(Integer, ForeignKey("blog_categories.id"))
-    category = relationship("BlogCategory", backref="blogs")
-    tags = relationship("BlogTag", secondary=blog_tags_association, backref="blogs")
-    created_at = Column(DateTime, server_default=db.func.now())
+    category: Mapped[BlogCategory] = relationship("BlogCategory")
+    tags: Mapped[BlogTag] = relationship("BlogTag", secondary=blog_tags_association)
+    created_at: datetime = Column(DateTime, default=datetime.utcnow)
 
     def __repr__(self) -> str:
         """Represent the Blog instance as a string."""
         return f"<Blog(title={self.title}, description={self.description})>"
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "id": self.id,
+            "title": self.title,
+            "description": self.description,
+            "content": self.content,
+            "is_draft": self.is_draft,
+            "category": self.category.to_dict(),
+            "tags": [tag.to_dict() for tag in self.tags],
+            "created_at": self.created_at.strftime('%a, %d %b %Y %H:%M:%S GMT'),
+        }
+
+    @validates("title", "description", "content", "is_draft", "category", "tags")
+    def validates_required(self, key, value):
+        if value is None or value == "":
+            raise GiganotoException(f"Blog {key} cannot be empty")
+        if key in length_mapping and len(value) > length_mapping[key]:
+            raise GiganotoException(f"Blog {key} cannot be longer than {length_mapping[key]} characters")
+        elif key in length_mapping and len(value) == 0:
+            raise GiganotoException(f"Blog {key} cannot be empty")
+        return value
 
     def url_from_title(self) -> str:
         """Generate a URL-friendly version of the blog title.
@@ -261,17 +305,6 @@ class Blog(db.Model):
             Optional[Blog]: The blog post with the ID, or None if not found.
         """
         return cls.query.filter_by(id=id).first()
-
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "id": self.id,
-            "title": self.title,
-            "description": self.description,
-            "content": self.content,
-            "category": self.category.to_dict(),
-            "tags": [tag.to_dict() for tag in self.tags],
-            "created_at": self.created_at,
-        }
 
     @classmethod
     def get_all(
@@ -294,7 +327,7 @@ class Blog(db.Model):
         return query.all()
 
     @classmethod
-    def get_by_category(
+    def get_all_by_category(
         cls,
         category_id: int,
         limit: Optional[int] = None,
@@ -318,7 +351,7 @@ class Blog(db.Model):
         return query.all()
 
     @classmethod
-    def get_by_tag(
+    def get_all_by_tag(
         cls,
         tag_id: int,
         limit: Optional[int] = None,
@@ -347,6 +380,7 @@ class Blog(db.Model):
         title: str,
         description: str,
         content: str,
+        is_draft: bool,
         category_id: int,
         tag_ids: List[int],
     ) -> "Blog":
@@ -367,6 +401,7 @@ class Blog(db.Model):
             title=title,
             description=description,
             content=content,
+            is_draft=is_draft,
             category_id=category_id,
             tags=tags,
         )

@@ -11,6 +11,7 @@ def create_blog(
     title: str,
     description: str,
     content: str,
+    is_draft: bool,
     category_id: int,
     tags: List[int],
 ) -> Optional[Blog]:
@@ -19,6 +20,7 @@ def create_blog(
             title=title,
             description=description,
             content=content,
+            is_draft=is_draft,
             category_id=category_id,
             tag_ids=tags,
         )
@@ -26,7 +28,7 @@ def create_blog(
         db.session.commit()
         return blog.to_dict()
     except Exception as e:
-        handle_exception(e, "Blog already exists")
+        handle_exception(e)
 
 
 def update_blog(
@@ -34,6 +36,7 @@ def update_blog(
     title: Optional[str] = None,
     description: Optional[str] = None,
     content: Optional[str] = None,
+    is_draft: Optional[bool] = None,
     category_id: Optional[int] = None,
     tags: Optional[List[int]] = None,
 ) -> Optional[Blog]:
@@ -45,6 +48,8 @@ def update_blog(
             blog.description = description
         if content:
             blog.content = content
+        if is_draft is not None:
+            blog.is_draft = is_draft
         if category_id:
             blog.category_id = category_id
         if tags:
@@ -126,7 +131,7 @@ def create_blog_category(
         db.session.commit()
         return category.to_dict()
     except Exception as e:
-        handle_exception(e, "Category already exists")
+        handle_exception(e)
 
 
 def update_blog_category(
@@ -135,24 +140,28 @@ def update_blog_category(
     description: Optional[str] = None,
 ) -> Optional[BlogCategory]:
     try:
-        category = BlogCategory.get_by_id(category_id=id)
-        if name:
+        category = BlogCategory.get_by_id(id)
+        if category is None:
+            abort(404, "Category does not exist")
+        if name is not None:
             category.name = name
-        if description:
+        if description is not None:
             category.description = description
         db.session.commit()
         return category.to_dict()
     except Exception as e:
-        handle_exception(e, "Category does not exist")
+        handle_exception(e)
 
 
 def delete_blog_category(id: int):
     try:
-        category = BlogCategory.get_by_id(category_id=id)
+        category = BlogCategory.get_by_id(id)
+        if category is None:
+            abort(404, "Category does not exist")
         db.session.delete(category)
         db.session.commit()
     except Exception as e:
-        handle_exception(e, "Category does not exist")
+        handle_exception(e)
 
 
 def get_all_categories(
@@ -203,7 +212,7 @@ def update_blog_tag(
 
 def delete_blog_tag(id: int):
     try:
-        tag = BlogTag.get_by_id(tag_id=id)
+        tag = BlogTag.get_by_id(id)
         if tag is None:
             abort(404, "Tag does not exist")
         db.session.delete(tag)

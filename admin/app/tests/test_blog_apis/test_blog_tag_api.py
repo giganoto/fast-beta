@@ -148,7 +148,14 @@ def test_update_blog_tag_failure_with_invalid_tag_id(client, init_database, test
     ({"description": ""}, "Tag description cannot be empty"),
     ({"name": ""}, "Tag name cannot be empty")
 ])
-def test_update_blog_tag_failure_with_invalid_data(client, init_database, test_admin, existing_blog_tag, data, expected_error_message):
+def test_update_blog_tag_failure_with_invalid_data(
+    client,
+    init_database,
+    test_admin,
+    existing_blog_tag,
+    data,
+    expected_error_message
+):
     tag_id = existing_blog_tag.id
     response = client.patch(
         url_for("blog.update_tag", tag_id=tag_id),
@@ -158,3 +165,42 @@ def test_update_blog_tag_failure_with_invalid_data(client, init_database, test_a
 
     assert response.status_code == 400
     assert expected_error_message in response.json["message"]
+
+
+def test_delete_blog_tag_success(client, init_database, test_admin, existing_blog_tag):
+    tag_id = existing_blog_tag.id
+    response = client.delete(
+        url_for("blog.delete_tag", tag_id=tag_id),
+        headers={"Authorization": f"Bearer {test_admin.token}"},
+    )
+    assert response.status_code == 200
+    assert response.json["message"] == "Tag deleted successfully"
+
+
+def test_delete_blog_tag_failure_without_token(client, init_database, existing_blog_tag):
+    tag_id = existing_blog_tag.id
+    response = client.delete(
+        url_for("blog.delete_tag", tag_id=tag_id),
+    )
+    assert response.status_code == 401
+    assert "Missing auth token" in response.json["message"]
+
+
+def test_delete_blog_tag_failure_with_invalid_token(client, init_database, existing_blog_tag):
+    tag_id = existing_blog_tag.id
+    response = client.delete(
+        url_for("blog.delete_tag", tag_id=tag_id),
+        headers={"Authorization": f"Bearer {fake.sha256()}"},
+    )
+    assert response.status_code == 401
+    assert "Invalid token" in response.json["message"]
+
+
+def test_delete_blog_tag_failure_with_invalid_tag_id(client, init_database, test_admin):
+    tag_id = fake.random_int()
+    response = client.delete(
+        url_for("blog.delete_tag", tag_id=tag_id),
+        headers={"Authorization": f"Bearer {test_admin.token}"},
+    )
+    assert response.status_code == 404
+    assert "Tag does not exist" in response.json["message"]

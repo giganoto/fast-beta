@@ -8,11 +8,13 @@ from app.utils.auth import token_required
 from app.controllers.blogs import (
     create_blog,
     get_all_blogs,
+    get_all_blogs_by_category,
+    get_all_blogs_by_tag,
     get_blog,
     update_blog,
     delete_blog,
     create_blog_category,
-    get_all_categories,
+    get_all_categories as get_all_categories_from_db,
     update_blog_category,
     delete_blog_category,
     create_blog_tag,
@@ -27,7 +29,31 @@ blog = blueprints.Blueprint("blog", __name__, url_prefix="/api/blog")
 
 @blog.route("/all", methods=["GET"])
 def get_all():
-    return jsonify(get_all_blogs())
+    return jsonify(
+        get_all_blogs(
+            limit=request.args.get("limit"), offset=request.args.get("offset")
+        )
+    )
+
+
+@blog.route("/all-by-category/<int:category_id>", methods=["GET"])
+def get_all_by_category(category_id: int):
+    return jsonify(
+        get_all_blogs_by_category(
+            category_id,
+            limit=request.args.get("limit"),
+            offset=request.args.get("offset"),
+        )
+    )
+
+
+@blog.route("/all-by-tag/<int:tag_id>", methods=["GET"])
+def get_all_by_tag(tag_id: int):
+    return jsonify(
+        get_all_blogs_by_tag(
+            tag_id, limit=request.args.get("limit"), offset=request.args.get("offset")
+        )
+    )
 
 
 @blog.route("/<int:blog_id>", methods=["GET"])
@@ -42,12 +68,14 @@ def create():
     title = data.get("title")
     description = data.get("description")
     content = data.get("content")
+    is_draft = data.get("is_draft")
     category_id = data.get("category_id")
     tags = data.get("tags")
     blog = create_blog(
         title,
         description,
         content,
+        is_draft,
         category_id,
         tags,
     )
@@ -61,6 +89,7 @@ def update(blog_id: int):
     title = data.get("title")
     description = data.get("description")
     content = data.get("content")
+    is_draft = data.get("is_draft")
     category_id = data.get("category_id")
     tags = data.get("tags")
     updated_blog_dict = update_blog(
@@ -68,6 +97,7 @@ def update(blog_id: int):
         title=title,
         description=description,
         content=content,
+        is_draft=is_draft,
         category_id=category_id,
         tags=tags,
     )
@@ -82,8 +112,8 @@ def delete(blog_id: int):
 
 
 @blog.route("/category/all", methods=["GET"])
-def get_all_categories_route():
-    return jsonify(get_all_categories())
+def get_all_categories():
+    return jsonify(get_all_categories_from_db())
 
 
 @blog.route("/category", methods=["POST"])
@@ -96,14 +126,14 @@ def create_category():
     return jsonify(category)
 
 
-@blog.route("/category/<int:category_id>", methods=["PUT"])
+@blog.route("/category/<int:category_id>", methods=["PATCH"])
 @token_required
 def update_category(category_id: int):
     data = request.get_json()
     name = data.get("name")
     description = data.get("description")
     updated_category_dict = update_blog_category(
-        category_id=category_id,
+        category_id,
         name=name,
         description=description,
     )

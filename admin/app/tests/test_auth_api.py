@@ -73,7 +73,8 @@ def test_secure_ping_access_denied(client):
 
     response = client.get(url_for("auth.secure_ping"))
     assert response.status_code == 401
-    assert "Forbidden" in json.loads(response.data)["message"]
+    assert "Unauthorized" in json.loads(response.data)["error"]
+    assert "Missing auth token" in json.loads(response.data)["message"]
 
 
 def test_secure_ping_access_invalid_token(client, init_database, test_admin):
@@ -92,4 +93,4 @@ def test_secure_ping_access_invalid_token(client, init_database, test_admin):
         headers={"Authorization": f"Bearer {should_be_invalid_token}"},
     )
     assert response.status_code == 401
-    assert "Invalid token" in json.loads(response.data)["error"]
+    assert "Invalid token" in json.loads(response.data)["message"]

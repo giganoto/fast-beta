@@ -20,7 +20,7 @@ from app.utils.auth import generate_jwt_token
 
 fake = Faker()
 
-TOTAL_BLOGS = 10
+TOTAL_BLOGS = 20
 TOTAL_BLOG_TAGS = 10
 TOTAL_BLOG_CATEGORIES = 10
 
@@ -64,11 +64,17 @@ def init_database(app):
 
         for idx in range(TOTAL_BLOGS):
             fake.seed_instance(idx)
+            category_id = (
+                (idx % TOTAL_BLOG_CATEGORIES) + 1
+                if idx < TOTAL_BLOGS//2
+                else fake.random_int(min=1, max=TOTAL_BLOG_CATEGORIES)
+            )
             create_blog(
                 title=fake.sentence(),
                 description=fake.sentence(),
                 content=fake.text(),
-                category_id=fake.random_int(min=1, max=TOTAL_BLOG_CATEGORIES),
+                is_draft=fake.boolean(),
+                category_id=category_id,
                 tags=[fake.random_int(min=1, max=TOTAL_BLOG_TAGS) for _ in range(min(TOTAL_BLOG_TAGS, 3))],
             )
 
